@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chess Clock</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    body, html {
+      height: 100%;
+    }
+    .timer-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      text-align: center;
+    }
+    .player {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3rem;
+      color: white;
+      user-select: none;
+    }
+    .player1 {
+      background-color: #222;
+    }
+    .player2 {
+      background-color: #444;
+    }
+    .active {
+      background-color: #008000 !important;
+    }
+    .controls {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    .controls button {
+      margin: 0 5px;
+      padding: 10px 15px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button onclick="setTime(60)">1 min</button>
+    <button onclick="setTime(180)">3 min</button>
+    <button onclick="setTime(300)">5 min</button>
+    <button onclick="setTime(600)">10 min</button>
+    <button onclick="resetGame()">Reset</button>
+  </div>
+
+  <div class="timer-container">
+    <div class="player player1" onclick="handleClick(0)">
+      <span id="timer1">--:--</span>
+    </div>
+    <div class="player player2" onclick="handleClick(1)">
+      <span id="timer2">--:--</span>
+    </div>
+  </div>
+
+  <script>
+    let times = [0, 0];
+    let interval;
+    let currentPlayer = null;
+
+    function setTime(seconds) {
+      times = [seconds, seconds];
+      updateTimers();
+      resetGame();
+    }
+
+    function resetGame() {
+      clearInterval(interval);
+      currentPlayer = null;
+      document.querySelector('.player1').classList.remove('active');
+      document.querySelector('.player2').classList.remove('active');
+      updateTimers();
+    }
+
+    function handleClick(player) {
+      if (currentPlayer === null) {
+        currentPlayer = player;
+        startTimer();
+      } else if (currentPlayer !== player) {
+        currentPlayer = player;
+      }
+      setActiveClass();
+    }
+
+    function startTimer() {
+      clearInterval(interval);
+      interval = setInterval(() => {
+        if (times[currentPlayer] > 0) {
+          times[currentPlayer]--;
+          updateTimers();
+        } else {
+          clearInterval(interval);
+          alert(`Player ${currentPlayer + 1} ran out of time!`);
+        }
+      }, 1000);
+    }
+
+    function setActiveClass() {
+      document.querySelector('.player1').classList.toggle('active', currentPlayer === 0);
+      document.querySelector('.player2').classList.toggle('active', currentPlayer === 1);
+      startTimer();
+    }
+
+    function updateTimers() {
+      document.getElementById('timer1').innerText = formatTime(times[0]);
+      document.getElementById('timer2').innerText = formatTime(times[1]);
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service worker registered.', reg))
+          .catch(err => console.error('Service worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
